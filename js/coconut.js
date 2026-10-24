@@ -64,6 +64,10 @@ if (clip && clipBtn) {
   const sync = () => { const on = !clip.paused; clipBtn.textContent = on ? '❚❚ Pause' : '▶ Play'; clipBtn.setAttribute('aria-pressed', String(!on)); };
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) { clip.removeAttribute('autoplay'); clip.pause(); }
   clip.addEventListener('play', sync); clip.addEventListener('pause', sync); sync();
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  clip.muted = true; clip.defaultMuted = true; clip.playsInline = true;
+  if (!reduce && 'IntersectionObserver' in window) new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting && clip.paused && !clip.dataset.user) clip.play().catch(() => {}); })).observe(clip);
+  clipBtn.addEventListener('click', () => { clip.dataset.user = '1'; });
   clipBtn.onclick = () => { if (clip.paused) clip.play().catch(() => {}); else clip.pause(); };
 }
 $('surge').onclick = () => { surgeT = 0; };
@@ -124,14 +128,20 @@ function draw() {
   // eddy outline + labels
   g.setLineDash([6, 6]); g.strokeStyle = 'rgba(238,255,65,0.55)'; g.lineWidth = 1.5;
   g.beginPath(); g.ellipse(X(P.xe0 + P.Le / 2), Y(P.W / 2), P.Le / 2 * sc, P.W / 2 * sc, 0, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
-  g.font = HAND; g.fillStyle = '#EEFF41'; g.textAlign = 'left';
+  g.textAlign = 'left';
   const small = W < 640;
-  g.font = (small ? '700 14px' : '700 18px') + ' Caveat, cursive';
-  g.fillText(`lateral eddy ≈ ${p.Ue.toFixed(2)} m/s`, X(P.xe0 + 0.2), Y(P.W + 0.42));
-  g.fillText(`fast chute ≈ ${Ueff.toFixed(1)} m/s →`, X(Math.max(vx0 + 0.3, 4.5)), Y(3.2));
-  g.fillStyle = '#bbb'; g.fillText('shear layer', X(P.xe1 + 0.5), Y(P.ys + 0.25));
-  g.fillText('boulder drop', X(P.xb - 0.9), Y(P.yb + P.rby + 0.25));
-  g.fillStyle = '#777'; g.fillText('near bank', 6, H - bank - 4);
+  // side-view inset geometry first, so labels can keep clear of it
+  const iw = small ? 128 : 156, picH = small ? 50 : 62, rowH = small ? 11 : 12, ih = picH + 3 * rowH + 6, ix = W - iw - 6, iy = bank + 5;
+  const inset = [ix - 4, iy - 2, ix + iw + 4, iy + ih + 4];
+  const fs = Math.round(Math.min(18, Math.max(13, W / 26)));
+  const boulderBox = [X(P.xb - P.rbx * 1.15) - 2, Y(P.yb + P.rby * 1.15) - 2, X(P.xb + P.rbx * 1.15) + 2, H];
+  placeLabels(g, bank, [inset, boulderBox], [
+    { t: [`fast chute ≈ ${Ueff.toFixed(1)} m/s →`, `chute ≈ ${Ueff.toFixed(1)} m/s →`, `${Ueff.toFixed(1)} m/s →`], x: X(Math.max(vx0 + 0.3, 4.5)), y: Y(3.2), c: '#EEFF41', f: fs },
+    { t: [`lateral eddy ≈ ${p.Ue.toFixed(2)} m/s`, `eddy ≈ ${p.Ue.toFixed(2)} m/s`, 'eddy'], x: X(P.xe0 + 0.2), y: Y(P.W + 0.42), c: '#EEFF41', f: fs },
+    { t: ['shear layer', 'shear'], x: X(P.xe1 + 0.5), y: Y(P.ys + 0.25), c: '#bbb', f: fs },
+    { t: ['boulder drop', 'boulder'], x: X(P.xb - 0.9), y: Y(P.yb + P.rby + 0.25), c: '#bbb', f: fs },
+    { t: ['near bank'], x: 6, alt: [W], y: H - bank - 4, c: '#777', f: fs },
+  ]);
   // boulder
   const bp = []; for (let k = 0; k < 18; k++) { const a = k / 18 * Math.PI * 2, rr = 1 + 0.08 * Math.sin(3 * a) + 0.05 * Math.cos(5 * a); bp.push([X(P.xb + P.rbx * rr * Math.cos(a)), Y(Math.max(-0.05, P.yb + P.rby * rr * Math.sin(a)))]); }
   g.fillStyle = '#5a5a5a'; wobblyPoly(g, bp, 7, 2); g.fill(); g.strokeStyle = '#EEFF41'; g.lineWidth = 2; wobblyPoly(g, bp, 8, 3); g.stroke();
@@ -145,23 +155,67 @@ function draw() {
   g.strokeStyle = '#d9a066'; g.lineWidth = 1.2; for (let k = 0; k < 5; k++) { g.beginPath(); g.arc(0, 0, R * (0.35 + 0.13 * k), k, k + 2.2); g.stroke(); }
   g.strokeStyle = '#ff3b30'; g.lineWidth = 2.5; g.beginPath(); g.arc(0, 0, R + 2.5, 0, Math.PI * 2); g.stroke();
   g.restore();
-  g.font = (small ? '700 15px' : '700 19px') + ' Caveat, cursive'; g.fillStyle = '#ff3b30';
-  g.fillText(c.under ? 'pulled under!' : 'coconut', X(c.x) + R + 4, Y(c.y) - R);
+  { // coconut label: keep inside the canvas and clear of the inset (flip side / drop below if needed)
+    g.font = `700 ${fs + 1}px Caveat, cursive`; g.fillStyle = '#ff3b30';
+    const txt = c.under ? 'pulled under!' : 'coconut', w = g.measureText(txt).width, h = fs;
+    const cx = X(c.x), cy = Y(c.y);
+    const cands = [[cx + R + 4, cy - R], [cx - R - 4 - w, cy - R], [cx + R + 4, cy + R + h], [cx - R - 4 - w, cy + R + h]];
+    let best = null;
+    for (const [lx, ly] of cands) { const bx = clampX(lx, w), by = clampY(ly, h, bank); if (!hit([bx, by - h, bx + w, by], inset)) { best = [bx, by]; break; } }
+    if (!best) best = [clampX(cands[0][0], w), clampY(cands[0][1], h, bank)];
+    g.fillText(txt, best[0], best[1]);
+  }
   // surge banner
   const sf = surgeFactor(surgeT);
   if (sf > 0) { g.fillStyle = `rgba(63,169,245,${0.18 * sf})`; g.fillRect(0, 0, W, H); g.fillStyle = '#3fa9f5'; g.font = '900 ' + (small ? 16 : 22) + 'px Archivo, sans-serif'; g.fillText('FLOOD SURGE  ×' + (1 + 1.3 * sf).toFixed(1), 12, bank + 26); }
   // side-view inset: buoyancy vs downwelling
-  const iw = small ? 104 : 140, ih = small ? 70 : 96, ix = W - iw - 8, iy = bank + 6;
-  g.fillStyle = 'rgba(0,0,0,0.78)'; g.strokeStyle = '#444'; g.lineWidth = 1; g.fillRect(ix, iy, iw, ih); g.strokeRect(ix, iy, iw, ih);
-  const wl = iy + ih * 0.38; g.fillStyle = 'rgba(63,169,245,0.35)'; g.fillRect(ix + 1, wl, iw - 2, iy + ih - wl - 1);
+  g.fillStyle = 'rgba(0,0,0,0.82)'; g.strokeStyle = '#444'; g.lineWidth = 1; g.fillRect(ix, iy, iw, ih); g.strokeRect(ix, iy, iw, ih);
+  const wl = iy + picH * 0.42, wb = iy + picH; g.fillStyle = 'rgba(63,169,245,0.35)'; g.fillRect(ix + 1, wl, iw - 2, wb - wl);
   g.strokeStyle = '#3fa9f5'; g.beginPath(); g.moveTo(ix, wl); g.lineTo(ix + iw, wl); g.stroke();
-  const Gm = floatGeom(p.D, p.s), rr = ih * 0.17 * (p.D / 0.175) ** 0.5;
-  const sub = Math.min(1.3, (Gm.d + c.zeta) / (2 * Gm.R)); const cy = wl - rr + 2 * rr * sub;
-  g.fillStyle = '#8a5a2b'; g.beginPath(); g.arc(ix + iw * 0.45, Math.min(cy, iy + ih - rr - 2), rr, 0, Math.PI * 2); g.fill();
-  g.fillStyle = '#EEFF41'; g.strokeStyle = '#EEFF41'; g.lineWidth = 2; arrow(g, ix + iw * 0.78, wl + 22, ix + iw * 0.78, wl + 6, 6);
-  g.fillStyle = '#ff9f1c'; g.strokeStyle = '#ff9f1c'; arrow(g, ix + iw * 0.9, wl + 4, ix + iw * 0.9, wl + 20, 6);
+  const Gm = floatGeom(p.D, p.s), rr = picH * 0.2 * (p.D / 0.175) ** 0.5;
+  const sub = Math.min(1.3, (Gm.d + c.zeta) / (2 * Gm.R)); const ccy = wl - rr + 2 * rr * sub;
+  g.fillStyle = '#8a5a2b'; g.beginPath(); g.arc(ix + iw * 0.4, Math.min(ccy, wb - rr - 1), rr, 0, Math.PI * 2); g.fill();
+  const wdLine = P.beta_d * Ueff, here = c.wd > 0.02;
+  g.fillStyle = '#EEFF41'; g.strokeStyle = '#EEFF41'; g.lineWidth = 2; arrow(g, ix + iw * 0.75, wl + 22, ix + iw * 0.75, wl + 5, 6);
+  g.globalAlpha = here ? 1 : 0.4; g.fillStyle = '#ff9f1c'; g.strokeStyle = '#ff9f1c'; arrow(g, ix + iw * 0.88, wl + 4, ix + iw * 0.88, wl + 21, 6); g.globalAlpha = 1;
   g.fillStyle = '#ddd'; g.font = '600 10px Archivo, sans-serif'; g.fillText('side view', ix + 5, iy + 12);
-  g.font = (small ? '600 9px' : '600 10px') + ' Archivo, sans-serif'; g.fillText(small ? `↑w_b ${Gm.wb.toFixed(2)} ↓w_d ${c.wd.toFixed(2)}` : `↑w_b ${Gm.wb.toFixed(2)}  ↓w_d ${c.wd.toFixed(2)} m/s`, ix + 4, iy + ih - 5);
+  const tf = small ? '600 9.5px Archivo, sans-serif' : '600 10.5px Archivo, sans-serif'; g.font = tf;
+  let ty = wb + rowH;
+  g.fillStyle = '#EEFF41'; g.fillText(`↑ rise w_b ${Gm.wb.toFixed(2)} m/s`, ix + 5, ty); ty += rowH;
+  g.fillStyle = '#ff9f1c'; g.fillText(here ? `↓ down w_d ${c.wd.toFixed(2)} here` : '↓ down w_d ≈ 0 here', ix + 5, ty); ty += rowH;
+  g.fillStyle = '#aaa'; g.fillText(`${wdLine.toFixed(2)} m/s on shear line`, ix + 5, ty);
+}
+const clampX = (x, w) => Math.max(4, Math.min(W - 4 - w, x));
+const clampY = (y, h, bank) => Math.max(bank + h + 2, Math.min(H - bank - 3, y));
+const hit = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
+// Responsive canvas labels: try each text variant (long → short) and a few nudged positions;
+// keep every label inside the canvas and never under the inset or another label.
+function placeLabels(g, bank, avoid, items) {
+  const placed = avoid.slice(), labels = [];
+  for (const it of items) {
+    let done = false;
+    for (const txt of it.t) { // long → short, then a smaller font, always staying near the anchor
+      for (const f of [it.f, it.f - 2]) {
+        g.font = `700 ${f}px Caveat, cursive`;
+        const w = g.measureText(txt).width, h = f * 0.85, max = Math.max(56, W * 0.2);
+        const xs = [it.x, it.x - w / 2, it.x - w, ...avoid.map((r) => r[0] - 6 - w), ...avoid.map((r) => r[2] + 6)];
+        const ys = [it.y, it.y - h - 3, it.y + h + 3, it.y - 2 * h - 6];
+        const cands = [];
+        for (const y0 of ys) for (const x0 of xs) { const x = clampX(x0, w), y = clampY(y0, h, bank); cands.push([Math.hypot(x - it.x, y - it.y), x, y]); }
+        for (const x0 of it.alt || []) { const x = clampX(x0, w), y = clampY(it.y, h, bank); cands.push([max, x, y]); }
+        cands.sort((p, q) => p[0] - q[0]);
+        for (const [d, x, y] of cands) {
+          if (d > max) break;
+          const box = [x - 2, y - h, x + w + 2, y + 3];
+          if (placed.some((r) => hit(box, r))) continue;
+          g.fillStyle = it.c; g.fillText(txt, x, y); placed.push(box); labels.push({ txt, box }); done = true; break;
+        }
+        if (done) break;
+      }
+      if (done) break;
+    }
+  }
+  window.__labels = { W, H, inset: avoid[0], boulder: avoid[1], labels }; // read by the e2e tests
 }
 function hud() {
   const n = numbers({ ...p, U: Ueff });
