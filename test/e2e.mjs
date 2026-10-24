@@ -49,6 +49,21 @@ const SMALL_TARGETS = () => [...document.querySelectorAll('button, .btn, .tabs a
   .filter((e) => { const r = e.getBoundingClientRect(); return r.height < 43.5 || (r.width < 43.5 && !e.matches('input')); })
   .map((e) => `${e.tagName.toLowerCase()}${e.id ? '#' + e.id : ''}.${[...e.classList].join('.')}"${(e.textContent || '').trim().slice(0, 18)}" ${Math.round(e.getBoundingClientRect().width)}x${Math.round(e.getBoundingClientRect().height)}`);
 
+async function checkLabels(p, tag, phase) {
+  const L = await p.evaluate(() => window.__labels);
+  if (!L) return ok(`${tag}: canvas labels (${phase})`, false, 'no __labels');
+  const hit = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
+  const bad = [];
+  L.labels.forEach((l, i) => {
+    const [x0, y0, x1, y1] = l.box;
+    if (x0 < 0 || y0 < 0 || x1 > L.W || y1 > L.H) bad.push(`out:${l.txt}`);
+    if (hit(l.box, L.inset)) bad.push(`inset:${l.txt}`);
+    if (L.boulder && hit(l.box, L.boulder)) bad.push(`boulder:${l.txt}`);
+    L.labels.forEach((m, j) => { if (j > i && hit(l.box, m.box)) bad.push(`overlap:${l.txt}|${m.txt}`); });
+  });
+  const need = ['→', 'eddy', 'shear', 'boulder', 'bank'].filter((k) => !L.labels.some((l) => l.txt.includes(k)));
+  ok(`${tag}: canvas labels inside bounds, clear of inset (${phase})`, !bad.length && !need.length, JSON.stringify({ W: L.W, bad, missing: need, labels: L.labels.map((l) => l.txt) }));
+}
 async function commonChecks(p, tag, resp, touch) {
   ok(`${tag}: HTTP 200`, resp && resp.status() === 200, String(resp && resp.status()));
   ok(`${tag}: all assets load`, p._bad.length === 0, p._bad.join(' | '));
@@ -76,6 +91,7 @@ for (const [id, dev] of DEVICES) {
     const p = watch(await ctx.newPage()); const resp = await p.goto(`${BASE}/`, { waitUntil: 'load' }); await p.waitForTimeout(1500);
     const tag = `lab @${id}`; await commonChecks(p, tag, resp, touch);
     const s0 = await lab(p); ok(`${tag}: sim running`, s0 && s0.t > 0.3, JSON.stringify(s0 && { t: s0.t }));
+    await checkLabels(p, tag, 'default');
     const geo = await p.evaluate(() => { const r = (q) => document.querySelector(q).getBoundingClientRect(); return { stage: r('#stage'), surge: r('#surge'), status: r('#status') }; });
     ok(`${tag}: sim visible in first screen`, geo.stage.top < vh * 0.5 && geo.stage.height > 120, `stageTop=${Math.round(geo.stage.top)} h=${Math.round(geo.stage.height)} vh=${vh}`);
     ok(`${tag}: status + flood-surge visible without scrolling`, geo.surge.bottom <= vh && geo.status.top >= 0, `surgeBottom=${Math.round(geo.surge.bottom)} vh=${vh}`);
@@ -83,6 +99,7 @@ for (const [id, dev] of DEVICES) {
     await p.evaluate(() => document.querySelectorAll('img[loading=lazy]').forEach((i) => i.scrollIntoView())); await p.waitForTimeout(800);
     ok(`${tag}: photos load`, (await p.$$eval('img', (is) => is.every((i) => i.complete && i.naturalWidth > 0))), JSON.stringify(imgs));
     ok(`${tag}: coconut highlighted in red on the photo`, (await p.$$eval('.shot svg.anno circle[stroke="#ff3b30"]', (c) => c.length)) >= 2);
+    if (type === 'webkit') results.push(['INFO', `${tag}: video in this WebKit build`, JSON.stringify(await p.evaluate(async () => { const v = document.getElementById('clip'); await new Promise((r) => setTimeout(r, 1500)); return { mp4: v.canPlayType('video/mp4; codecs="avc1.640028"'), webm: v.canPlayType('video/webm; codecs="vp9"'), src: v.currentSrc.split('/').pop(), paused: v.paused, readyState: v.readyState, err: v.error && v.error.code, muted: v.muted, playsInline: v.playsInline, autoplay: v.autoplay }; }))]);
     if (type === 'chromium') ok(`${tag}: real-footage loop plays`, await p.evaluate(async () => { const v = document.getElementById('clip'); for (let i = 0; i < 20 && v.readyState < 2; i++) await new Promise((r) => setTimeout(r, 250)); return v.readyState >= 2 && !v.error; }));
     await p.evaluate(() => window.scrollTo(0, 0)); await p.waitForTimeout(300);
     if (!land) await shot(p, `lab-${id}.png`);
@@ -90,6 +107,7 @@ for (const [id, dev] of DEVICES) {
     if (touch) await p.tap('#surge'); else await p.click('#surge');
     let [esc, s] = await waitState(p, (s) => s.state !== 'trapped');
     ok(`${tag}: flood surge frees the coconut`, esc, JSON.stringify(s));
+    await checkLabels(p, tag, 'surge');
     ok(`${tag}: ESCAPING indicator`, /ESCAP/.test(await p.textContent('#status')));
     if (land) await shot(p, `lab-${id}.png`);
     // pause off-screen: scroll to the footer, simulated time must stop
@@ -166,6 +184,7 @@ for (const [id, dev] of DEVICES) {
 for (const b of Object.values(browsers)) if (b) await b.close();
 if (server) server.close();
 for (const r of results) console.log(r.join('  '));
-const f = results.filter((r) => r[0] === 'FAIL').length, sk = results.filter((r) => r[0] === 'SKIP').length;
-console.log(`\n${results.length - f - sk}/${results.length - sk} passed${sk ? `, ${sk} skipped` : ''}`);
+const f = results.filter((r) => r[0] === 'FAIL').length, sk = results.filter((r) => r[0] === 'SKIP').length, inf = results.filter((r) => r[0] === 'INFO').length;
+const n = results.length - sk - inf;
+console.log(`\n${n - f}/${n} passed${sk ? `, ${sk} skipped` : ''}${inf ? `, ${inf} info` : ''}`);
 process.exit(f ? 1 : 0);
