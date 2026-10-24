@@ -9,7 +9,7 @@ const F = new Field(); let builtKey = '';
 const c = new Coconut();
 let paused = false, surgeT = -1, respawnT = -1, Ueff = p.U, trail = [], simT = 0, errors = 0;
 
-const NPART = matchMedia('(max-width: 640px)').matches ? 900 : 1800;
+const NPART = matchMedia('(max-width: 640px)').matches ? 800 : 1800;
 const px = new Float32Array(NPART), py = new Float32Array(NPART), age = new Float32Array(NPART);
 function seed(i, anywhere) {
   do { px[i] = anywhere ? Math.random() * P.Lx : Math.random() * 0.4; py[i] = Math.random() * P.Ly; } while (inBoulder(px[i], py[i], 0.05));
@@ -19,12 +19,13 @@ for (let i = 0; i < NPART; i++) seed(i, true);
 
 const X = (x) => (x - vx0) * sc, Y = (y) => (P.Ly - y) * sc;
 function resize() {
-  W = stage.clientWidth; const narrow = W < 640;
+  W = stage.clientWidth; const narrow = W < 640 && innerHeight > 500; // phones in portrait: zoom on the eddy
   vx0 = narrow ? 0.9 : 0; vx1 = narrow ? 8.7 : P.Lx;
   sc = W / (vx1 - vx0); H = Math.round(P.Ly * sc);
   ctxT = fit(cvT, W, H); ctxO = fit(cvO, W, H); ctxT.fillStyle = '#000'; ctxT.fillRect(0, 0, W, H);
 }
-addEventListener('resize', resize); resize();
+let rzT = 0, lastIH = innerHeight; const onResize = () => { if (stage.clientWidth !== W || (innerHeight > 500) !== (lastIH > 500)) { lastIH = innerHeight; clearTimeout(rzT); rzT = setTimeout(resize, 120); } };
+addEventListener('resize', onResize); addEventListener('orientationchange', () => setTimeout(resize, 200)); resize();
 
 function surgeFactor(t) { // flood surge envelope: ramp 1.5 s, hold 5 s, decay 4 s
   if (t < 0) return 0; if (t < 1.5) return t / 1.5; if (t < 6.5) return 1; if (t < 10.5) return 1 - (t - 6.5) / 4; return 0;
@@ -35,20 +36,47 @@ function ensureField() {
 }
 
 // ---------- UI ----------
+if (matchMedia('(max-width: 979px)').matches) document.getElementById('more')?.removeAttribute('open');
 const fmt1 = (v) => v.toFixed(1), $ = (id) => document.getElementById(id);
 bindSlider('U', (v) => v.toFixed(1) + ' m/s', (v) => { p.U = v; });
 bindSlider('D', (v) => Math.round(v) + ' cm', (v) => { p.D = v / 100; });
 bindSlider('s', (v) => v.toFixed(2), (v) => { p.s = v; });
 bindSlider('Ue', (v) => v.toFixed(2) + ' m/s', (v) => { p.Ue = v; });
-document.querySelectorAll('[data-s]').forEach((b) => b.addEventListener('click', () => { $('s').value = b.dataset.s; $('s').dispatchEvent(new Event('input')); }));
+const setVal = (k, v) => { $(k).value = v; $(k).dispatchEvent(new Event('input')); };
+const markChips = () => document.querySelectorAll('[data-s]').forEach((b) => b.classList.toggle('on', Math.abs(+b.dataset.s - p.s) < 0.005));
+$('s').addEventListener('input', markChips); markChips();
+document.querySelectorAll('[data-s]').forEach((b) => b.addEventListener('click', () => setVal('s', b.dataset.s)));
+// "Break it" challenge cards: set up a scenario, then bring the sim into view
+const defaults = () => { for (const [k, v] of [['U', 2.5], ['D', 17.5], ['s', 0.95], ['Ue', 0.35]]) setVal(k, v); surgeT = -1; };
+const scenarios = {
+  surge: () => { defaults(); c.reset(); trail = []; surgeT = 0; },
+  fast: () => { defaults(); setVal('U', 4.5); c.reset(); trail = []; },
+  heavy: () => { defaults(); setVal('s', 0.99); c.reset(); trail = []; },
+  light: () => { defaults(); setVal('s', 0.80); c.reset(); trail = []; },
+};
+document.querySelectorAll('[data-try]').forEach((b) => b.addEventListener('click', () => {
+  scenarios[b.dataset.try]?.(); if (paused) $('pause').click();
+  $('lab').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+}));
+// real-footage loop: respect reduced motion, offer pause
+const clip = $('clip'), clipBtn = $('clip-toggle');
+if (clip && clipBtn) {
+  const sync = () => { const on = !clip.paused; clipBtn.textContent = on ? '❚❚ Pause' : '▶ Play'; clipBtn.setAttribute('aria-pressed', String(!on)); };
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { clip.removeAttribute('autoplay'); clip.pause(); }
+  clip.addEventListener('play', sync); clip.addEventListener('pause', sync); sync();
+  clipBtn.onclick = () => { if (clip.paused) clip.play().catch(() => {}); else clip.pause(); };
+}
 $('surge').onclick = () => { surgeT = 0; };
 $('drop').onclick = () => { c.reset(); trail = []; respawnT = -1; };
 $('pause').onclick = (e) => { paused = !paused; e.target.setAttribute('aria-pressed', paused); e.target.textContent = paused ? '▶ Play' : '❚❚ Pause'; };
-$('reset').onclick = () => { for (const [k, v] of [['U', 2.5], ['D', 17.5], ['s', 0.95], ['Ue', 0.35]]) { $(k).value = v; $(k).dispatchEvent(new Event('input')); } surgeT = -1; c.reset(); trail = []; };
+$('reset').onclick = () => { defaults(); c.reset(); trail = []; };
 
 // ---------- loop ----------
-let last = performance.now();
+let last = performance.now(), onScreen = true;
+new IntersectionObserver((es) => { onScreen = es[0].isIntersecting; }, { threshold: 0 }).observe(stage);
+document.addEventListener('visibilitychange', () => { last = performance.now(); });
 function frame(now) {
+  if (!onScreen || document.hidden) { last = now; requestAnimationFrame(frame); return; }
   let dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now;
   try {
     if (!paused) {
@@ -115,9 +143,9 @@ function draw() {
   g.save(); g.translate(X(c.x), Y(c.y)); g.rotate(-c.ang); g.globalAlpha = c.under ? 0.4 : 1;
   g.fillStyle = '#8a5a2b'; g.beginPath(); g.arc(0, 0, R, 0, Math.PI * 2); g.fill();
   g.strokeStyle = '#d9a066'; g.lineWidth = 1.2; for (let k = 0; k < 5; k++) { g.beginPath(); g.arc(0, 0, R * (0.35 + 0.13 * k), k, k + 2.2); g.stroke(); }
-  g.strokeStyle = '#fff'; g.lineWidth = 2; g.beginPath(); g.arc(0, 0, R + 2, 0, Math.PI * 2); g.stroke();
+  g.strokeStyle = '#ff3b30'; g.lineWidth = 2.5; g.beginPath(); g.arc(0, 0, R + 2.5, 0, Math.PI * 2); g.stroke();
   g.restore();
-  g.font = (small ? '700 15px' : '700 19px') + ' Caveat, cursive'; g.fillStyle = c.under ? '#ff5c39' : '#fff';
+  g.font = (small ? '700 15px' : '700 19px') + ' Caveat, cursive'; g.fillStyle = '#ff3b30';
   g.fillText(c.under ? 'pulled under!' : 'coconut', X(c.x) + R + 4, Y(c.y) - R);
   // surge banner
   const sf = surgeFactor(surgeT);
@@ -131,7 +159,7 @@ function draw() {
   const sub = Math.min(1.3, (Gm.d + c.zeta) / (2 * Gm.R)); const cy = wl - rr + 2 * rr * sub;
   g.fillStyle = '#8a5a2b'; g.beginPath(); g.arc(ix + iw * 0.45, Math.min(cy, iy + ih - rr - 2), rr, 0, Math.PI * 2); g.fill();
   g.fillStyle = '#EEFF41'; g.strokeStyle = '#EEFF41'; g.lineWidth = 2; arrow(g, ix + iw * 0.78, wl + 22, ix + iw * 0.78, wl + 6, 6);
-  g.fillStyle = '#ff5c39'; g.strokeStyle = '#ff5c39'; arrow(g, ix + iw * 0.9, wl + 4, ix + iw * 0.9, wl + 20, 6);
+  g.fillStyle = '#ff9f1c'; g.strokeStyle = '#ff9f1c'; arrow(g, ix + iw * 0.9, wl + 4, ix + iw * 0.9, wl + 20, 6);
   g.fillStyle = '#ddd'; g.font = '600 10px Archivo, sans-serif'; g.fillText('side view', ix + 5, iy + 12);
   g.font = (small ? '600 9px' : '600 10px') + ' Archivo, sans-serif'; g.fillText(small ? `↑w_b ${Gm.wb.toFixed(2)} ↓w_d ${c.wd.toFixed(2)}` : `↑w_b ${Gm.wb.toFixed(2)}  ↓w_d ${c.wd.toFixed(2)} m/s`, ix + 4, iy + ih - 5);
 }
@@ -143,8 +171,9 @@ function hud() {
   $('n-re').textContent = (n.Re / 1e3).toFixed(0) + 'k';
   $('n-fr').textContent = n.Fr.toFixed(2);
   $('n-dr').textContent = n.dragRatio > 999 ? '∞' : n.dragRatio.toFixed(0) + '×';
-  const bm = n.wb / Math.max(1e-6, c.wd); $('n-bm').textContent = bm > 9.9 ? '>10' : bm.toFixed(2); $('n-bm').style.color = bm < 1 ? '#ff5c39' : bm < 1.5 ? '#ff9f43' : '';
+  const bm = n.wb / Math.max(1e-6, c.wd); $('n-bm').textContent = bm > 9.9 ? '>10' : bm.toFixed(2); $('n-bm').style.color = bm < 1 ? '#ff9f1c' : bm < 1.5 ? '#ffd166' : '';
   $('n-wd').textContent = (n.wb / n.wd).toFixed(2);
+  $('n-frt').textContent = n.FrToe.toFixed(1);
   $('n-tx').textContent = n.Tex.toFixed(0) + ' s';
   $('n-m').textContent = n.mass.toFixed(2) + ' kg';
   $('n-prot').textContent = Math.round(protection(Ueff) * 100) + '%';
