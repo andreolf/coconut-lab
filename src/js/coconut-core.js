@@ -7,6 +7,7 @@ export const P = {
   W: 1.3, Le: 2.6,          // lateral eddy width / length behind boulder (≈2 boulder sizes)
   delta: 0.12,              // shear-layer half-thickness
   y1: 0.15,                 // chute depth (Fr)
+  Hdrop: 0.75,              // boulder drop height to the plunge toe (assumed)
   CD: 0.5, CA: 0.5,         // drag & added-mass coefficients (assumed)
   k_ex: 0.025,              // dead-zone exchange coefficient E/U (Uijttewaal / Weitbrecht 0.01–0.04)
   beta_d: 0.30,             // downwelling at lateral shear line w_d = beta_d·U (assumed)
@@ -162,7 +163,10 @@ export class Coconut {
 export function numbers(p) {
   const G = floatGeom(p.D, p.s);
   const wd = P.beta_d * p.U;
+  // plunge toe after the boulder drop H (energy, no losses): U_t = √(U² + 2gH), y_t = U·y1/U_t
+  const Ut = Math.sqrt(p.U * p.U + 2 * P.g * P.Hdrop), yt = p.U * P.y1 / Ut;
   return {
+    FrToe: Ut / Math.sqrt(P.g * yt),
     Re: p.U * p.D / P.nu,
     Fr: p.U / Math.sqrt(P.g * P.y1),
     dragRatio: (p.U / Math.max(0.01, p.Ue)) ** 2,

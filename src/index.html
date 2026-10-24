@@ -1,71 +1,135 @@
 <!doctype html>
 <html lang="en"><head>
 <!--HEAD-->
-<title>The coconut that never escapes · Coconut Lab Bali · free interactive river-eddy simulation</title>
-<meta name="description" content="Interactive river eddy simulation: why a floating coconut stays trapped behind a boulder in a Bali stream. Free, no sign-up.">
+<title>The coconut that never escapes · Coconut Lab Bali · interactive river-eddy simulation</title>
+<meta name="description" content="A coconut circles for ages behind a boulder in a Bali stream. Play with a live simulation of the river eddy, then break it with a flood surge. Free, no sign-up.">
+<link rel="canonical" href="https://andreolf.github.io/coconut-lab/">
+<meta property="og:url" content="https://andreolf.github.io/coconut-lab/">
 <meta property="og:title" content="The coconut that never escapes · Coconut Lab Bali">
-<meta property="og:description" content="A floating coconut circles behind a boulder in a Bali stream for ages. Play with the river, then break it. Free, no sign-up.">
-<meta property="og:image" content="assets/coconut_still.jpg">
+<meta property="og:description" content="A coconut circles for ages behind a boulder in a Bali stream. Play with the river, then break it. Free, no sign-up.">
+<meta name="twitter:title" content="The coconut that never escapes · Coconut Lab Bali">
+<meta name="twitter:description" content="A coconut circles for ages behind a boulder in a Bali stream. Play with the river, then break it. Free, no sign-up.">
 </head><body data-page="index">
 <!--NAV-->
-<main class="wrap">
-  <h1 style="margin:28px 0 10px;font-size:clamp(30px,5vw,52px)">The coconut that <span style="color:var(--lime)">never escapes</span></h1>
-  <p class="lead" style="margin:0">I filmed a coconut stuck for ages in a Bali stream, circling behind a boulder while the chute next to it roars past at about 2.5 m/s. Below, the same river seen from above. Play with it, then try to <b>break it</b>.</p>
-  <div class="lab">
-    <div>
-      <div class="stage" id="stage"><canvas id="trail"></canvas><canvas id="over" class="ov"></canvas></div>
-      <div class="legend"><span><i style="background:#5abeff"></i>slow &lt;0.6 m/s</span><span><i style="background:#c8e6ff"></i>0.6–1.8 m/s</span><span><i style="background:#EEFF41"></i>fast chute</span><span><i style="background:#8a5a2b"></i>coconut (to scale)</span><span>plan view · 12 m × 5 m reach</span></div>
+<main id="main">
+  <section class="lab-hero wrap" aria-labelledby="h1">
+    <p class="eyebrow">Interactive lab · filmed in Bali</p>
+    <h1 id="h1">The coconut that <em>never escapes</em></h1>
+    <p class="lead">A coconut circles behind a boulder in a Bali stream<span class="xtra">, while the chute beside it runs at ~2.5&nbsp;m/s. Below is the same river from above, live</span>. Push the river until it escapes.</p>
+  </section>
+
+  <section class="wrap lab" id="lab" aria-label="Simulation">
+    <div class="sim">
+      <div class="stage-wrap">
+        <div class="stage" id="stage"><canvas id="trail" aria-hidden="true"></canvas><canvas id="over" class="ov" role="img" aria-label="Plan view of the river: water particles stream past a boulder; a coconut, ringed in red, circles in the eddy behind it."></canvas></div>
+        <div class="legend"><span><i style="background:#5abeff"></i>slow &lt;0.6 m/s</span><span><i style="background:#c8e6ff"></i>0.6–1.8</span><span><i style="background:#EEFF41"></i>fast chute</span><span><i class="ring"></i>coconut</span><span class="xtra">plan view, 12 × 5 m reach</span></div>
+      </div>
     </div>
-    <aside class="panel">
-      <div id="status" class="status ok">TRAPPED</div>
-      <div class="nums">
-        <div class="num"><b id="n-re">–</b><i>Re = U·D/ν</i></div>
-        <div class="num"><b id="n-fr">–</b><i>Fr = U/√(g·y₁)</i></div>
-        <div class="num"><b id="n-dr">–</b><i>drag ratio chute/eddy (U/Uₑ)²</i></div>
-        <div class="num"><b id="n-bm">–</b><i>buoyancy margin w_b/w_d here</i></div>
-        <div class="num"><b id="n-wd">–</b><i>margin on the shear line</i></div>
-        <div class="num"><b id="n-prot">–</b><i>boulder shelter</i></div>
-        <div class="num"><b id="n-tx">–</b><i>water exchange time W/(kU)</i></div>
-        <div class="num"><b id="n-m">–</b><i>coconut mass</i></div>
-        <div class="num"><b id="n-fb">–</b><i>freeboard (dry part)</i></div>
-        <div class="num"><b id="n-u">–</b><i>coconut speed</i></div>
+    <aside class="panel" aria-label="Controls">
+      <div id="status" class="status ok" role="status" aria-live="polite">TRAPPED</div>
+      <div class="kpis">
+        <div class="kpi"><b id="n-re">–</b><span title="Reynolds number U·D/ν">Re = UD/ν</span></div>
+        <div class="kpi"><b id="n-fr">–</b><span title="Froude number of the chute U/√(g·y₁)">Fr chute</span></div>
+        <div class="kpi"><b id="n-dr">–</b><span title="drag ratio chute/eddy (U/Uₑ)²">drag ratio</span></div>
       </div>
-      <div class="ctl"><label for="U">River (chute) speed U <span id="U-v"></span></label><input id="U" type="range" min="0.5" max="5" step="0.1" value="2.5"><small>filmed: ~2–3 m/s</small></div>
-      <div class="ctl"><label for="D">Coconut diameter D <span id="D-v"></span></label><input id="D" type="range" min="10" max="30" step="0.5" value="17.5"></div>
-      <div class="ctl"><label for="s">Coconut density ρc/ρw <span id="s-v"></span></label><input id="s" type="range" min="0.6" max="0.99" step="0.01" value="0.95">
-        <div class="btns"><button class="btn ghost sm" data-s="0.95">husked, soaked ≈0.95</button><button class="btn ghost sm" data-s="0.80">fresh green ≈0.80</button><button class="btn ghost sm" data-s="0.65">dry husk ≈0.65</button></div><small>densities are assumptions (not weighed)</small></div>
-      <div class="ctl"><label for="Ue">Eddy strength Uₑ <span id="Ue-v"></span></label><input id="Ue" type="range" min="0" max="0.6" step="0.01" value="0.35"><small>filmed: ~0.2–0.5 m/s</small></div>
-      <div class="btns">
-        <button id="surge" class="btn warn">🌊 Break it: flood surge</button>
-        <button id="drop" class="btn ghost sm">Drop new coconut</button>
-        <button id="pause" class="btn ghost sm" aria-pressed="false">❚❚ Pause</button>
-        <button id="reset" class="btn ghost sm">Reset</button>
+      <div class="actions">
+        <button id="surge" class="btn surge" type="button">🌊 Break it: flood surge</button>
+        <button id="drop" class="btn sm" type="button">New coconut</button>
+        <button id="pause" class="btn sm" type="button" aria-pressed="false">❚❚ Pause</button>
+        <button id="reset" class="btn sm" type="button">Reset</button>
       </div>
+      <details class="more" id="more" open>
+        <summary>All live numbers</summary>
+        <div class="nums">
+          <div class="kpi"><b id="n-bm">–</b><span>buoyancy margin w_b/w_d at the coconut</span></div>
+          <div class="kpi"><b id="n-wd">–</b><span>margin on the shear line</span></div>
+          <div class="kpi"><b id="n-tx">–</b><span>residence time W/(kU)</span></div>
+          <div class="kpi"><b id="n-frt">–</b><span>Fr at the plunge toe</span></div>
+          <div class="kpi"><b id="n-prot">–</b><span>boulder shelter</span></div>
+          <div class="kpi"><b id="n-m">–</b><span>coconut mass (s·ρ·V)</span></div>
+          <div class="kpi"><b id="n-fb">–</b><span>freeboard (dry cap)</span></div>
+          <div class="kpi"><b id="n-u">–</b><span>coconut speed</span></div>
+        </div>
+      </details>
     </aside>
-  </div>
-
-  <div class="note"><b>Break-it challenges.</b> ① Hit <i>flood surge</i>. ② Push U past ~3.5 m/s: the water starts overtopping the boulder and the shelter collapses. ③ Make the coconut almost neutral (ρ ≥ 0.98) or shrink it to 10 cm: the downwelling at the shear line pulls it under, and the deep underflow carries it away. ④ Make it a light green one (0.80): now it's even harder to free.</div>
-
-  <div class="twocol" style="margin-top:26px">
-    <div class="prose">
-      <h3>What's going on</h3>
-      <p>The boulder blocks part of the river. Right behind it the main flow <b>separates</b>, and the slow water left in its lee turns into a <b>lateral eddy</b> (a recirculation zone, or dead zone). Its streamlines are closed loops. A floating body that follows them just goes round and round.</p>
-      <p>Getting out means crossing the <b>shear layer</b>, the thin band where the speed jumps from ~0.3 to ~2.5 m/s. There are two ways across:</p>
-      <ul>
-        <li><b>Turbulent kicks</b> in the shear layer. Here they are an Ornstein–Uhlenbeck random velocity with σ ≈ 0.07·U.</li>
-        <li><b>Getting pulled under.</b> Water dives down along the shear line at w_d ≈ 0.3·U. A floating sphere resists with its buoyant rise speed <span class="eq">w_b = √(8/3 · g R (1−ρc/ρw) / C_D)</span>. If w_b/w_d &lt; 1 where the coconut is, it gets dragged into the underflow, which heads downstream. On the shear line itself the margin is below 1 at the filmed settings. The coconut survives because its orbit stays just inside the line, until a turbulent kick or a tweak of yours pushes it closer.</li>
-      </ul>
-      <p>The coconut's horizontal motion is a reduced Maxey–Riley equation with drag, added mass (C_A = 0.5), and fluid-acceleration force:</p>
-      <span class="eq eqblock">(m + C_A ρ V_s) dv/dt = ½ ρ C_D A_w |u−v|(u−v) + (1+C_A) ρ V_s Du/Dt</span>
-      <p>Here V_s is the submerged volume (Archimedes: V_s = (ρc/ρw)·V) and A_w is the submerged frontal area, so a light coconut sitting high in the water feels less drag.</p>
-      <p>The flow field is analytic: a tanh shear layer in a stream function, with the flow rate rescaled so the chute speeds up next to the boulder, plus a closed cellular eddy confined to the dead zone. The <i>boulder shelter</i> fades out between 3.2 and 4.4 m/s, a stand-in for the boulder being overtopped and its wake swept out. The offline reduced-order model put the critical speed at ≈3.5 m/s and sweep-out at ≈4.2 m/s.</p>
+    <div class="panel sliders" aria-label="Parameters">
+    <div class="ctls">
+      <div class="ctl"><label for="U"><span>River (chute) speed U</span> <output id="U-v" for="U"></output></label><input id="U" type="range" min="0.5" max="5" step="0.1" value="2.5"><small>filmed: ~2–3 m/s · escape ≳ 3.5 m/s</small></div>
+      <div class="ctl"><label for="D"><span>Coconut diameter D</span> <output id="D-v" for="D"></output></label><input id="D" type="range" min="10" max="30" step="0.5" value="17.5"></div>
+      <div class="ctl"><label for="s"><span>Density ρ<sub>c</sub>/ρ<sub>w</sub></span> <output id="s-v" for="s"></output></label><input id="s" type="range" min="0.5" max="0.99" step="0.01" value="0.95">
+        <div class="row"><button class="chip" type="button" data-s="0.95">soaked 0.95</button><button class="chip" type="button" data-s="0.80">fresh 0.80</button><button class="chip" type="button" data-s="0.60">dry husk 0.60</button></div>
+        <small>assumed, not weighed. 0.95 is probably too heavy: <a href="theory.html#honest">why</a></small></div>
+      <div class="ctl"><label for="Ue"><span>Eddy strength Uₑ</span> <output id="Ue-v" for="Ue"></output></label><input id="Ue" type="range" min="0" max="0.6" step="0.01" value="0.35"><small>filmed: ~0.2–0.5 m/s</small></div>
     </div>
-    <div>
-      <figure class="photo"><img src="assets/coconut_still.jpg" alt="Frame from Francesco's video: a Bali stream with boulders and a fast white-water chute" loading="lazy"><figcaption>The real thing: a frame from my video in Bali, with the boulder drop, the white-water chute and the calm lee where the coconut circles.</figcaption></figure>
-      <figure class="photo" style="margin-top:14px"><img src="assets/coconut_fbd.jpg" alt="Hand-sketch free-body diagram of the coconut" loading="lazy"><figcaption>Free-body sketch from the offline analysis (D2Q9 lattice-Boltzmann + side-view roller model, Python).</figcaption></figure>
     </div>
-  </div>
-  <div class="note"><b>Educational approximation.</b> All parameters (D ≈ 17.5 cm, ρc/ρw ≈ 0.95, U ≈ 2.5 m/s, Uₑ ≈ 0.35 m/s, eddy 1.3 m × 2.6 m, C_D = 0.5, β_d = 0.3) are rough estimates from a 14-second clip. The flow is prescribed, not solved: the coconut doesn't disturb the water, there is no free-surface or 3-D roller physics, and turbulence is a random-walk model. Want the real thing? See the <a href="tools.html">OpenFOAM interFoam + 6-DoF outline</a>.</div>
+  </section>
+
+  <section class="wrap sec" id="challenges" aria-labelledby="h-ch">
+    <div class="sec-head"><p class="eyebrow">Break it on purpose</p><h2 id="h-ch">Four ways to free the coconut</h2><p>Predict first, then press the button. Each one sets up the sim and scrolls you back to it.</p></div>
+    <div class="cards">
+      <div class="card"><span class="n">01</span><h3>Flood it</h3><p>A surge more than doubles the jet speed for a few seconds. The eddy is drowned and the shear layer sweeps the coconut out.</p><button class="btn sm" type="button" data-try="surge">Try it</button></div>
+      <div class="card"><span class="n">02</span><h3>Overtop the boulder</h3><p>Push U past ~3.5 m/s. Water starts pouring over the boulder, its shelter collapses, and the eddy loses its grip.</p><button class="btn sm" type="button" data-try="fast">U = 4.5 m/s</button></div>
+      <div class="card"><span class="n">03</span><h3>Make it heavier</h3><p>At ρ ≥ 0.98 the coconut barely floats. The water diving down at the shear line pulls it under, and the underflow carries it away.</p><button class="btn sm" type="button" data-try="heavy">ρ = 0.99</button></div>
+      <div class="card"><span class="n">04</span><h3>Make it lighter</h3><p>A fresh green coconut (ρ ≈ 0.8) rises faster than the water can push it down. It is even harder to free. Why? <a href="theory.html#buoyancy">Buoyancy</a>.</p><button class="btn sm" type="button" data-try="light">ρ = 0.80</button></div>
+    </div>
+  </section>
+
+  <section class="wrap sec" id="real" aria-labelledby="h-real">
+    <div class="sec-head"><p class="eyebrow">The real thing</p><h2 id="h-real">What I actually filmed</h2><p>A 13.8-second clip from a stream in Bali. The coconut never left the calm water behind the boulder.</p></div>
+    <div class="media">
+      <figure>
+        <div class="shot">
+          <picture><source media="(max-width:640px)" srcset="assets/coconut-real-600.jpg"><img src="assets/coconut-real-900.jpg" width="900" height="1125" alt="Bali stream seen from above: a large boulder top left, white water rushing along the bottom, and a brown coconut floating in the calm dark water beside the boulder." decoding="async"></picture>
+          <svg class="anno" viewBox="0 0 1080 1350" aria-hidden="true">
+            <path d="M40 862 C 260 905, 520 1000, 840 1092" fill="none" stroke="#fff" stroke-width="5" stroke-dasharray="18 14" opacity=".9"/>
+            <ellipse cx="640" cy="905" rx="300" ry="150" fill="none" stroke="#EEFF41" stroke-width="5" stroke-dasharray="4 14" stroke-linecap="round" opacity=".95"/>
+            <circle cx="697" cy="952" r="62" fill="none" stroke="#ff3b30" stroke-width="8"/>
+            <path d="M840 742 C 820 820, 790 860, 750 900" fill="none" stroke="#ff3b30" stroke-width="8" stroke-linecap="round"/>
+            <path d="M750 900 l 8 -36 M750 900 l 34 -14" fill="none" stroke="#ff3b30" stroke-width="8" stroke-linecap="round"/>
+            <text x="760" y="720" font-size="74" fill="#ff3b30">coconut</text>
+            <text x="300" y="400" font-size="64" fill="#fff" text-anchor="middle">boulder</text>
+            <text x="250" y="830" font-size="54" fill="#EEFF41">eddy: calm, ~0.3 m/s</text>
+            <text x="70" y="1210" font-size="62" fill="#EEFF41">white-water jet ≈ 2.5 m/s</text>
+            <text x="560" y="1145" font-size="44" fill="#fff">shear layer</text>
+          </svg>
+          <span class="badge">STILL · t = 1.5 s</span>
+        </div>
+        <figcaption><b>Frame at 1.5 s.</b> The <span class="red">coconut</span> sits in the slow lateral eddy, just inside the shear layer where the white-water jet races past. Labels are my reading of the footage; the eddy outline is approximate.</figcaption>
+      </figure>
+      <div class="media-side">
+        <figure>
+          <div class="shot">
+            <video id="clip" muted loop playsinline autoplay preload="metadata" poster="assets/coconut-loop-poster.jpg" width="540" height="676" aria-label="The first three seconds of the clip, looping: the coconut drifts in the calm water beside the white-water jet.">
+              <source src="assets/coconut-loop.mp4" type="video/mp4">
+              <source src="assets/coconut-loop.webm" type="video/webm">
+            </video>
+            <span class="badge">CLIP · 0–3 s, looped</span>
+            <button id="clip-toggle" class="btn sm vid-toggle" type="button" aria-pressed="false">❚❚ Pause</button>
+          </div>
+          <figcaption><b>Real footage, 3 s loop, no sound.</b> Look for the small brown ball right of centre, drifting in the dark water.</figcaption>
+        </figure>
+        <figure>
+          <div class="shot">
+            <img src="assets/coconut-later-600.jpg" width="600" height="750" loading="lazy" decoding="async" alt="About six seconds later, after the camera pans away and back, the same coconut is still floating beside the boulder.">
+            <svg class="anno" viewBox="0 0 1080 1350" aria-hidden="true"><circle cx="824" cy="988" r="64" fill="none" stroke="#ff3b30" stroke-width="9"/><text x="560" y="870" font-size="70" fill="#ff3b30">still here</text></svg>
+            <span class="badge">STILL · t ≈ 7.8 s</span>
+          </div>
+          <figcaption><b>About 6 s later</b>, after the camera pans upstream and back, it is still circling in the same eddy.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap sec" id="why" aria-labelledby="h-why">
+    <div class="sec-head"><p class="eyebrow">In 30 seconds</p><h2 id="h-why">Why it can't get out</h2></div>
+    <div class="grid3">
+      <div class="tile"><h3>1 · A dead zone</h3><p>The boulder blocks the near bank. Behind it the main flow separates, and the left-over slow water turns into a lateral eddy with closed streamlines. A floater just goes round and round.</p><a href="theory.html#eddy">The lateral eddy →</a></div>
+      <div class="tile"><h3>2 · A wall of shear</h3><p>Leaving means crossing the shear layer, where speed jumps from ~0.3 to ~2.5 m/s. Exchange across it is slow: about 19 s for this eddy, longer than the clip.</p><a href="theory.html#residence">Residence time →</a></div>
+      <div class="tile"><h3>3 · Float or dive</h3><p>Water dives down along the shear line. A light coconut rises faster than it is pushed down and stays at the surface, trapped. A heavy one is dragged under and flushed away.</p><a href="theory.html#buoyancy">Buoyancy vs downwelling →</a></div>
+    </div>
+    <div class="cta"><a class="btn primary" href="theory.html">Read the full theory</a><a class="btn" href="tools.html">Do it properly with free tools</a></div>
+    <div class="callout"><span class="t">Honest disclaimer</span>This is a <b>simplified, educational model</b>. The flow is prescribed, not solved: the coconut doesn't disturb the water, there is no free-surface or 3-D roller physics, and turbulence is a random walk. All parameters (D ≈ 17.5 cm, ρ<sub>c</sub>/ρ<sub>w</sub> ≈ 0.95, U ≈ 2.5 m/s, Uₑ ≈ 0.35 m/s, eddy 1.3 × 2.6 m, C<sub>D</sub> = 0.5) are rough estimates from video, and the assumed coconut mass (2.67 kg) looks too high. <a href="theory.html#honest">What the model gets wrong</a>.</div>
+  </section>
 </main>
 <!--FOOTER-->
 <script type="module" src="js/coconut.js"></script>

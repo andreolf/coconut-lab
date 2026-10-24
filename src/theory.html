@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en"><head>
+<!--HEAD-->
+<title>Theory · why the coconut never escapes · eddies, shear layers, buoyancy, hydraulic jumps · Coconut Lab Bali</title>
+<meta name="description" content="A worked explainer of the trapped coconut: lateral eddies, shear layers and downwelling, residence time T = W/(kU), buoyant rise speed, tumbling, Froude numbers and the submerged hydraulic jump, control volumes, and why floods set it free.">
+<link rel="canonical" href="https://andreolf.github.io/coconut-lab/theory.html">
+<meta property="og:url" content="https://andreolf.github.io/coconut-lab/theory.html">
+<meta property="og:title" content="The physics of a coconut that never escapes · Coconut Lab Bali">
+<meta property="og:description" content="Lateral eddies, shear layers, residence time, buoyancy vs downwelling, tumbling, Froude numbers and submerged hydraulic jumps, worked through with real numbers.">
+<meta name="twitter:title" content="The physics of a coconut that never escapes">
+<meta name="twitter:description" content="Eddies, shear layers, residence time, buoyancy, tumbling and hydraulic jumps, worked through with real numbers.">
+</head><body data-page="theory">
+<!--NAV-->
+<main id="main" class="wrap">
+  <div class="doc">
+    <aside class="toc" aria-label="Contents">
+      <div>
+        <details id="toc" open>
+          <summary>Contents</summary>
+          <ol>
+            <li><a href="#scene">The scene, in numbers</a></li>
+            <li><a href="#eddy">The lateral eddy</a></li>
+            <li><a href="#shear">Shear layer &amp; downwelling</a></li>
+            <li><a href="#residence">How long it stays</a></li>
+            <li><a href="#buoyancy">Float or dive</a></li>
+            <li><a href="#fbd">Free-body diagram</a></li>
+            <li><a href="#drag">Drag &amp; Reynolds number</a></li>
+            <li><a href="#spin">Tumbling &amp; angular momentum</a></li>
+            <li><a href="#jump">Froude &amp; the drowned jump</a></li>
+            <li><a href="#cv">Control volumes</a></li>
+            <li><a href="#floods">Why floods set it free</a></li>
+            <li><a href="#model">What the browser model does</a></li>
+            <li><a href="#honest">What it gets wrong</a></li>
+            <li><a href="#refs">Further reading</a></li>
+          </ol>
+        </details>
+      </div>
+    </aside>
+
+    <article class="article">
+      <header class="article-hero">
+        <p class="eyebrow">Theory · about 20 min read</p>
+        <h1>Why the coconut <em>never escapes</em></h1>
+        <p class="lead">One coconut, one boulder, one 13.8-second clip. That is enough to walk through most of a first course in fluid mechanics: separation, shear layers, buoyancy, drag, angular momentum, hydraulic jumps and control volumes, with real (estimated) numbers at every step.</p>
+        <div class="meta"><span class="chip">simplified models</span><span class="chip">order-of-magnitude estimates</span><span class="chip">parameters from video</span></div>
+      </header>
+
+      <div class="prose">
+      <div class="keybox" aria-label="Key numbers">
+        <div><b>4×10⁵</b><span>Reynolds number UD/ν</span></div>
+        <div><b>≈ 19 s</b><span>residence time in the eddy</span></div>
+        <div><b>0.48 vs 0.75</b><span>rise vs downwelling speed [m/s]</span></div>
+        <div><b>Fr ≈ 5.1</b><span>at the plunge toe → drowned jump</span></div>
+      </div>
+
+      <section id="scene" aria-labelledby="h-scene">
+        <h2 id="h-scene"><span class="num">01</span>The scene, in numbers</h2>
+        <p>I filmed a coconut floating in a small stream in Bali. A large boulder sits against one bank. The main flow squeezes past it as a white-water chute and spills over a drop into a pool. In the calm, dark water directly behind the boulder, the coconut drifts around in circles. For the whole 13.8 seconds of the clip it never gets out, even though water a metre away is moving at about 2.5&nbsp;m/s.</p>
+        <p>Nothing was measured on site. Every number below is an estimate from the footage (foam speeds, the size of the coconut relative to the rocks) or an assumption from textbooks. Treat them as <strong>plausible values with wide error bars</strong>, not data.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Quantity</th><th>Estimate</th><th>Plausible range · source</th></tr></thead>
+          <tbody>
+            <tr><td>Coconut diameter <tex>D</tex></td><td class="v">17.5 cm</td><td>15–20 cm · visual</td></tr>
+            <tr><td>Density ratio <tex>s=\rho_c/\rho_w</tex></td><td class="v">0.95 (assumed)</td><td>≈ 0.5–1.0 · <a href="#honest">probably too high</a></td></tr>
+            <tr><td>Chute (jet) speed <tex>U</tex></td><td class="v">2.5 m/s</td><td>2–3 m/s · foam tracking by eye</td></tr>
+            <tr><td>Eddy surface speed <tex>U_e</tex></td><td class="v">0.35 m/s</td><td>0.2–0.5 m/s · by eye</td></tr>
+            <tr><td>Drop height <tex>H</tex></td><td class="v">0.75 m</td><td>0.5–1 m</td></tr>
+            <tr><td>Chute depth <tex>y_1</tex> · pool depth <tex>h</tex></td><td class="v">0.15 m · 0.8 m</td><td>assumed</td></tr>
+            <tr><td>Eddy width <tex>W</tex> · length <tex>L</tex></td><td class="v">1.2 m · 2.5 m</td><td>≈ 1 and 2 boulder sizes</td></tr>
+            <tr><td>Exchange coefficient <tex>k</tex></td><td class="v">0.025</td><td>0.015–0.04 · lab studies of groyne fields</td></tr>
+            <tr><td>Drag · added-mass coefficients</td><td class="v"><tex>C_D=0.5,\ C_A=0.5</tex></td><td>sphere, textbook values</td></tr>
+            <tr><td>Water</td><td class="v"><tex>\rho=1000\ \mathrm{kg/m^3}</tex></td><td><tex>\nu=10^{-6}\ \mathrm{m^2/s}</tex>, <tex>g=9.81\ \mathrm{m/s^2}</tex></td></tr>
+          </tbody>
+        </table></div>
+        <p>From these, the coconut's volume is <tex>V=\tfrac{\pi}{6}D^3\approx 2.8\ \mathrm{L}</tex>. With the assumed <tex>s=0.95</tex> its mass would be <tex>m=s\rho V\approx 2.67\ \mathrm{kg}</tex>. Keep an eye on that number. It turns out to be the weakest link in the whole story.</p>
+      </section>
+
+      <section id="eddy" aria-labelledby="h-eddy">
+        <h2 id="h-eddy"><span class="num">02</span>The lateral eddy behind the boulder</h2>
+        <p>Water can't turn a sharp corner at speed. As the flow passes the boulder, the pressure behind it would have to rise to slow the near-wall fluid. The slow fluid next to the rock doesn't have the momentum to push into that rising pressure, so the flow <strong>separates</strong>. The main stream leaves the boulder's edge as a free jet, and the region behind the rock is cut off from it.</p>
+        <p>That cut-off water doesn't stand still. Friction with the passing jet drags its outer edge downstream, and it has to come back somewhere, so it turns into a slowly rotating <strong>lateral eddy</strong> (also called a recirculation zone or dead zone). River engineers see the same thing between groynes and in harbour mouths. The jet reattaches to the bank roughly two obstacle sizes downstream, here at <tex>L\approx 2.5\ \mathrm{m}</tex>.</p>
+        <figure class="fig wide"><div class="frame"><!--FIG:plan--></div><figcaption><span class="k">Plan view.</span> The jet separates at the boulder; a slow eddy of width <tex>W</tex> fills its lee, bounded by the shear layer. The coconut (red) circles inside.</figcaption></figure>
+        <p>In plan view, it helps to describe the flow with a stream function <tex>\psi(x,y)</tex>, where the velocity is</p>
+        <texd>u=\frac{\partial\psi}{\partial y},\qquad v=-\frac{\partial\psi}{\partial x}.</texd>
+        <p>Lines of constant <tex>\psi</tex> are streamlines, and inside the eddy they are <strong>closed loops</strong>. That's the key fact. Anything that simply follows the water, a leaf or a coconut, goes round and round forever. To escape, something has to push it <em>across</em> streamlines. The browser lab models the eddy as a closed cell</p>
+        <texd>\psi_e=-\frac{U_e W}{\pi}\,\sin\!\Big(\frac{\pi (x-x_0)}{L}\Big)\sin\!\Big(\frac{\pi y}{W}\Big),</texd>
+        <p>sitting next to a jet whose speed jumps across a smooth <tex>\tanh</tex> profile. With <tex>U_e/U\approx 0.14</tex>, the eddy turns over once every <tex>\sim 2(W+L)/U_e\approx 20\ \mathrm{s}</tex>. That's slow and lazy, which matches the footage.</p>
+      </section>
+
+      <section id="shear" aria-labelledby="h-shear">
+        <h2 id="h-shear"><span class="num">03</span>The shear layer and the downwelling</h2>
+        <p>Between the eddy and the jet there's a thin band, a few tens of centimetres wide, where the speed jumps from about 0.3 to 2.5 m/s. This <strong>shear layer</strong> is unstable. It rolls up into Kelvin–Helmholtz vortices that grow, merge and shed downstream, and you can see them as the boils and swirls along the edge of the white water. Its vorticity is large:</p>
+        <texd>\omega_z\sim\frac{\Delta U}{2\delta}\approx\frac{2.85\ \mathrm{m/s}}{0.5\ \mathrm{m}}\approx 5.7\ \mathrm{s^{-1}}.</texd>
+        <p>Those vortices are the only thing that can carry the coconut across the closed streamlines. They give it random sideways kicks. In the lab they are modelled as a random velocity with a standard deviation of about <tex>0.07\,U</tex> and a memory of 0.4 s (an Ornstein–Uhlenbeck process).</p>
+        <p>There is also a vertical story. Along the shear line, slow eddy water and fast jet water <strong>converge at the surface</strong>. Mass conservation for an incompressible fluid,</p>
+        <texd>\nabla\cdot\mathbf u=\frac{\partial u}{\partial x}+\frac{\partial v}{\partial y}+\frac{\partial w}{\partial z}=0,</texd>
+        <p>says that if the horizontal flow converges (<tex>\partial u/\partial x+\partial v/\partial y\lt 0</tex>), the water must go down (<tex>\partial w/\partial z\gt 0</tex> below a surface where <tex>w=0</tex>). That's why foam and leaves collect in lines along shear layers: they float, and the water under them dives. Here the downwelling speed is modelled as</p>
+        <texd>w_d=\beta_d\,U\approx 0.3\times 2.5\ \mathrm{m/s}=0.75\ \mathrm{m/s}.</texd>
+        <figure class="fig"><div class="frame"><!--FIG:downwelling--></div><figcaption><span class="k">Cross-section through the shear line.</span> Surface convergence drives a downward current <tex>w_d</tex>. A floater resists with its buoyant rise speed <tex>w_b</tex>. Below the surface the water leaves as underflow, heading downstream.</figcaption></figure>
+        <p>Be warned that <tex>\beta_d=0.3</tex> is a guess. It is the least constrained number in the model, and as you'll see in section 5, it decides whether the coconut stays afloat.</p>
+      </section>
+
+      <section id="residence" aria-labelledby="h-res">
+        <h2 id="h-res"><span class="num">04</span>How long it stays: residence time</h2>
+        <p>Draw a control volume around the whole eddy: width <tex>W</tex>, length <tex>L</tex>, depth <tex>h</tex>. Water (and anything in it) leaks out across the shear layer at an exchange velocity that experiments on river groyne fields put at a small fraction of the main-stream speed, <tex>E=kU</tex> with <tex>k\approx 0.015\text{–}0.04</tex>. For the amount of "eddy water" <tex>c</tex> still inside, a mass balance gives</p>
+        <texd>\begin{gathered}\underbrace{WLh\,\frac{dc}{dt}}_{\text{change inside}}=-\underbrace{kU\,Lh\,c}_{\text{flux out}}\\[4pt]\Longrightarrow\quad c(t)=c_0\,e^{-t/T},\qquad T=\frac{W}{kU}.\end{gathered}</texd>
+        <p>With <tex>W=1.2\ \mathrm{m}</tex>, <tex>k=0.025</tex> and <tex>U=2.5\ \mathrm{m/s}</tex>:</p>
+        <texd>T=\frac{1.2}{0.025\times 2.5}\approx 19\ \mathrm{s}.</texd>
+        <p>So a passive floater would stay about 19 s on average, longer than the clip. The chance it is still there after 13.8 s is <tex>e^{-13.8/19}\approx 0.5</tex>, a coin flip. Seeing it stay is no surprise.</p>
+        <p>Turn the question around: how fast would the river have to run for the coconut to escape <em>within</em> the clip? Setting <tex>T=13.8\ \mathrm{s}</tex>,</p>
+        <texd>\begin{gathered}U\gtrsim\frac{W}{k\cdot 13.8\ \mathrm{s}}\approx 3.5\ \mathrm{m/s}\\[2pt]\text{(}2.2\text{–}5.8\ \mathrm{m/s}\ \text{for}\ k=0.04\text{–}0.015\text{)}\end{gathered}</texd>
+        <figure class="fig wide"><div class="frame"><!--FIG:residence--></div><figcaption><span class="k">Residence time vs jet speed.</span> The lime band covers the plausible range of <tex>k</tex>. Blue dots come from an offline 2-D lattice-Boltzmann simulation with tracked particles. They escape about twice as fast as the simple formula predicts, a fair measure of how uncertain this all is.</figcaption></figure>
+      </section>
+
+      <section id="buoyancy" aria-labelledby="h-buoy">
+        <h2 id="h-buoy"><span class="num">05</span>Float or dive: buoyancy vs downwelling</h2>
+        <p>A floating body sinks until it displaces its own weight of water (Archimedes):</p>
+        <texd>\rho\,g\,V_\text{sub}=m\,g\quad\Longrightarrow\quad V_\text{sub}=s\,V.</texd>
+        <p>Now push it fully under. The net upward force is <tex>(1-s)\rho g V</tex>, and it rises until drag balances that force. Using <tex>V=\tfrac43\pi R^3</tex> and frontal area <tex>\pi R^2</tex>,</p>
+        <texd>\begin{gathered}(1-s)\,\rho g\,\tfrac43\pi R^3=\tfrac12\rho\,C_D\,\pi R^2\,w_b^2\\[4pt]\Longrightarrow\quad w_b=\sqrt{\frac{8\,g\,R\,(1-s)}{3\,C_D}}.\end{gathered}</texd>
+        <p>For our coconut (<tex>R=8.75\ \mathrm{cm}</tex>, <tex>C_D=0.5</tex>) that gives <tex>w_b\approx 0.48\ \mathrm{m/s}</tex> at <tex>s=0.95</tex>, about 0.96 m/s at <tex>s=0.8</tex>, and 1.35 m/s at <tex>s=0.6</tex>.</p>
+        <p>Compare that with the downwelling. If the water dives faster than the coconut can rise, <tex>w_b\lt w_d</tex>, the coconut gets dragged under, picked up by the underflow and flushed downstream. The threshold density ratio is</p>
+        <texd>\begin{aligned}s^*&=1-\frac{3\,C_D\,w_d^2}{8\,g\,R}\\&=1-\frac{3(0.5)(0.75)^2}{8(9.81)(0.0875)}\approx 0.88.\end{aligned}</texd>
+        <figure class="fig"><div class="frame"><!--FIG:rise--></div><figcaption><span class="k">Rise speed vs density ratio.</span> Lighter than <tex>s^*\approx 0.88</tex>, the coconut beats the 0.75 m/s downwelling and stays on the surface, trapped. The assumed 0.95 sits on the wrong side of the line.</figcaption></figure>
+        <p>In force terms: the downwelling drag on a fully submerged coconut, <tex>\tfrac12\rho C_D\pi R^2 w_d^2\approx 3.4\ \mathrm{N}</tex>, is more than twice the net buoyancy at <tex>s=0.95</tex> (<tex>\approx 1.4\ \mathrm{N}</tex>). This is the surprising lesson of the lab: <strong>being light keeps the coconut trapped</strong>. A heavy, waterlogged nut can't hold the surface on the shear line, so it gets pulled under and escapes. At the assumed <tex>s=0.95</tex> the model coconut survives only because its orbit stays just inside the shear line. That's fragile, and it's one reason I think 0.95 is too heavy (<a href="#honest">section 13</a>).</p>
+      </section>
+
+      <section id="fbd" aria-labelledby="h-fbd">
+        <h2 id="h-fbd"><span class="num">06</span>The free-body diagram</h2>
+        <p>Cut the coconut free from its surroundings and draw every force on it. It's the most useful sketch in mechanics.</p>
+        <figure class="fig"><div class="frame"><!--FIG:fbd--></div><figcaption><span class="k">Free-body diagram</span> of the floating coconut (side view, flow from left to right).</figcaption></figure>
+        <ul>
+          <li><strong>Weight</strong> <tex>W=mg\approx 26\ \mathrm{N}</tex> at the centre of mass (if <tex>m=2.67\ \mathrm{kg}</tex>).</li>
+          <li><strong>Buoyancy</strong> <tex>F_B=\rho g V_\text{sub}</tex> at the centre of the submerged volume, up to <tex>\rho g V\approx 27.5\ \mathrm{N}</tex> fully submerged.</li>
+          <li><strong>Drag</strong> from the relative velocity <tex>\mathbf u-\mathbf v</tex>: the jet pulls one way, the eddy's return current the other. Only the submerged frontal area <tex>A_w</tex> counts.</li>
+          <li><strong>Downwelling drag</strong> on the shear line, pulling it down.</li>
+          <li><strong>Added mass</strong>: accelerating the coconut also accelerates the water around it, which acts like an extra <tex>C_A\rho V_\text{sub}</tex> of inertia (half the displaced mass for a sphere).</li>
+          <li><strong>Torque</strong> from the shear across it, which makes it spin (section 8).</li>
+        </ul>
+        <p>Put together horizontally, this is a reduced form of the Maxey–Riley equation for a small sphere in a non-uniform flow:</p>
+        <texd>\begin{aligned}(m+C_A\rho V_s)\,\frac{d\mathbf v}{dt}={}&\tfrac12\rho\,C_D\,A_w\,|\mathbf u-\mathbf v|\,(\mathbf u-\mathbf v)\\&+(1+C_A)\,\rho V_s\,\frac{D\mathbf u}{Dt}.\end{aligned}</texd>
+        <p>The last term is the pressure-gradient force the fluid would need to accelerate itself, plus its added-mass share. It is what makes a floater hug curved streamlines. Neglected here: the Basset history force, Magnus and shear lift, wave forces, and wind.</p>
+      </section>
+
+      <section id="drag" aria-labelledby="h-drag">
+        <h2 id="h-drag"><span class="num">07</span>Drag and the Reynolds number</h2>
+        <p>The Reynolds number compares inertia with viscosity:</p>
+        <texd>\mathrm{Re}=\frac{U D}{\nu}=\frac{2.5\times 0.175}{10^{-6}}\approx 4.4\times10^5.</texd>
+        <p>That's based on the jet speed. What matters for drag is the <em>relative</em> speed between coconut and water, typically a few tenths of a m/s, which gives <tex>\mathrm{Re}_\text{rel}\approx 5\times 10^4</tex>. Either way viscosity is negligible except in a thin boundary layer, and drag is dominated by the low-pressure wake. For a sphere between roughly <tex>10^3</tex> and <tex>2\times 10^5</tex>, <tex>C_D</tex> sits on a plateau near 0.4–0.5. A smooth sphere has a "drag crisis" around <tex>3\times10^5</tex>, where <tex>C_D</tex> drops sharply. A hairy husk would trigger it earlier, but at the relevant relative speeds we're on the plateau, so <tex>C_D\approx 0.5</tex> is a fair choice.</p>
+        <p>Because drag goes as speed squared, the jet pulls on anything that touches it</p>
+        <texd>\left(\frac{U}{U_e}\right)^2=\left(\frac{2.5}{0.35}\right)^2\approx 51</texd>
+        <p>times harder than the eddy does. That's why the shear layer is a one-way door. Once the coconut gets a solid foothold in the jet, it's gone within a second.</p>
+      </section>
+
+      <section id="spin" aria-labelledby="h-spin">
+        <h2 id="h-spin"><span class="num">08</span>Tumbling and angular momentum</h2>
+        <p>In the footage the coconut visibly rotates. A sphere free to turn in a shear flow spins at about half the local fluid vorticity, <tex>\Omega/2</tex>. That gives a few rad/s in the shear layer. In the offline side-view model, turbulent bursts push it to about 2–9 rad/s. A hard upper bound is <tex>\Delta U/D\approx 16\ \mathrm{rad/s}</tex>.</p>
+        <p>Its angular momentum is <tex>L=I\omega</tex>. Treating it as a thick shell, <tex>I\approx 0.3\,mR^2\approx 6\times10^{-3}\ \mathrm{kg\,m^2}</tex> (assumed; the liquid inside lags behind the shell), so</p>
+        <texd>\begin{gathered}L=I\omega\approx 0.012\text{–}0.055\ \mathrm{kg\,m^2/s}\\[2pt]\text{for}\ \ \omega\approx 2\text{–}9\ \mathrm{rad/s}.\end{gathered}</texd>
+        <p>What happens when it drifts out of the shear layer into calm water? The angular-momentum balance about its centre is <tex>I\,\dot\omega=T</tex>. With a turbulent, quadratic resisting torque <tex>T=-\tfrac12 C_M\rho R^5|\omega|\omega</tex> (<tex>C_M\approx 0.1</tex>, assumed),</p>
+        <texd>\begin{gathered}\omega(t)=\frac{\omega_0}{1+t/\tau},\\[4pt]\tau=\frac{2I}{C_M\,\rho\,R^5\,\omega_0}\approx 1.5\ \mathrm{s}\ \ (\omega_0\approx 16\ \mathrm{rad/s}).\end{gathered}</texd>
+        <p>Pure viscous (Stokes) friction, <tex>T=-8\pi\mu R^3\omega</tex>, would take <tex>\tau=I/(8\pi\mu R^3)\approx 6</tex> minutes. So the spin is forgotten within a couple of seconds. It records where the coconut has <em>just</em> been, a little like a tracer of recent shear.</p>
+        <figure class="fig"><div class="frame"><!--FIG:spin--></div><figcaption><span class="k">Spin-down</span> after leaving the shear layer. Turbulent friction kills the spin in seconds; viscosity alone would take minutes. Spin ratios <tex>\omega R/|\mathbf u-\mathbf v|</tex> of order 1 also mean Magnus lift is not negligible, one more thing this simple model leaves out.</figcaption></figure>
+      </section>
+
+      <section id="jump" aria-labelledby="h-jump">
+        <h2 id="h-jump"><span class="num">09</span>Froude numbers and the drowned hydraulic jump</h2>
+        <p>The Froude number compares the flow speed with the speed of shallow-water waves, <tex>\sqrt{gy}</tex>:</p>
+        <texd>\mathrm{Fr}=\frac{U}{\sqrt{g\,y}}.</texd>
+        <p>In the chute, <tex>\mathrm{Fr}_1=2.5/\sqrt{9.81\times0.15}\approx 2.1</tex>. The flow is <em>supercritical</em>: waves can't travel upstream against it. It then falls down the 0.75 m drop. Energy (ignoring losses) and continuity per unit width, <tex>q=Uy=0.375\ \mathrm{m^2/s}</tex>, give the speed and depth at the toe of the plunge:</p>
+        <texd>\begin{gathered}U_t=\sqrt{U_1^2+2gH}\approx 4.6\ \mathrm{m/s},\\[4pt]y_t=\frac{q}{U_t}\approx 8\ \mathrm{cm},\\[4pt]\mathrm{Fr}_t=\frac{U_t}{\sqrt{g\,y_t}}\approx 5.1.\end{gathered}</texd>
+        <p>Supercritical flow running into slow, deep water has to jump up to subcritical, and does so in a hydraulic jump. Momentum conservation across it (next section) gives Bélanger's equation for the <strong>conjugate depth</strong>:</p>
+        <texd>\begin{gathered}\frac{y_2}{y_t}=\frac12\left(\sqrt{1+8\,\mathrm{Fr}_t^2}-1\right)\\[4pt]\Longrightarrow\quad y_2\approx 0.55\ \mathrm{m}.\end{gathered}</texd>
+        <p>But the pool is about 0.8 m deep, deeper than 0.55 m (a submergence ratio of about 1.45). The jump is <strong>drowned</strong>. Instead of a standing wall of white water, the jet dives under the tailwater and a <em>submerged roller</em> forms on top, with a surface current running back toward the drop. That's the vertical twin of the lateral eddy, and a second trap for anything floating. A free jump at these numbers would dissipate <tex>\Delta E=(y_2-y_t)^3/(4y_ty_2)\approx 0.57\ \mathrm{m}</tex> of head, about half the incoming energy.</p>
+        <figure class="fig wide"><div class="frame"><!--FIG:jump--></div><figcaption><span class="k">Side view of the plunge.</span> The dashed box is the control volume used to derive Bélanger's equation. The jump stays drowned as long as the conjugate depth stays below the pool depth. With the chute depth fixed, that holds up to a chute speed of roughly 4.2 m/s.</figcaption></figure>
+      </section>
+
+      <section id="cv" aria-labelledby="h-cv">
+        <h2 id="h-cv"><span class="num">10</span>Control volumes: the bookkeeping behind it all</h2>
+        <p>Almost every result above comes from the same move: draw a box, then count what flows in and out. Reynolds' transport theorem turns the laws for a fixed lump of matter into laws for a fixed (or moving) box. For linear momentum,</p>
+        <texd>\begin{aligned}\sum\mathbf F={}&\frac{d}{dt}\int_{CV}\rho\,\mathbf u\,dV\\&+\oint_{CS}\rho\,\mathbf u\,(\mathbf u\cdot\mathbf n)\,dA,\end{aligned}</texd>
+        <p>and for angular momentum about a point G,</p>
+        <texd>\begin{aligned}\sum\mathbf M_G={}&\frac{d}{dt}\int_{CV}\rho\,(\mathbf r\times\mathbf u)\,dV\\&+\oint_{CS}\rho\,(\mathbf r\times\mathbf u)(\mathbf u\cdot\mathbf n)\,dA.\end{aligned}</texd>
+        <figure class="fig"><div class="frame"><!--FIG:cv--></div><figcaption><span class="k">A control volume around the coconut.</span> The momentum missing from the wake leaving the box is exactly the drag force.</figcaption></figure>
+        <p>Three boxes do the work in this lab:</p>
+        <ol>
+          <li><strong>Around the coconut.</strong> The momentum deficit in its wake equals the drag. The angular-momentum version gives the spin-down law of section 8.</li>
+          <li><strong>Around the jump</strong> (steady, per unit width, ignoring bed friction). Hydrostatic pressure forces on the two faces balance the momentum flux:
+            <texd>\tfrac12\rho g\,y_t^2-\tfrac12\rho g\,y_2^2=\rho\,q\,(U_2-U_t),</texd>
+            which, with <tex>q=U_ty_t=U_2y_2</tex>, rearranges into Bélanger's equation.</li>
+          <li><strong>Around the eddy.</strong> A mass (tracer) balance gives the exponential emptying and <tex>T=W/(kU)</tex> of section 4.</li>
+        </ol>
+      </section>
+
+      <section id="floods" aria-labelledby="h-floods">
+        <h2 id="h-floods"><span class="num">11</span>Why rain and floods set it free</h2>
+        <p>After heavy rain the discharge <tex>Q</tex> goes up, and almost everything in this story moves against the coconut at once. How much faster the water runs depends on the channel. Near critical flow <tex>U\propto Q^{1/3}</tex>, and for uniform flow in a wide channel <tex>U\propto Q^{0.4}</tex>. As a <strong>rough rule</strong>, doubling <tex>Q</tex> buys roughly +30–40% in speed. Take +40%, from 2.5 to 3.5 m/s:</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Quantity</th><th>Normal (U = 2.5 m/s)</th><th>After rain (U ≈ 3.5 m/s)</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td>Residence time <tex>T=W/(kU)</tex></td><td class="v">≈ 19 s</td><td class="v">≈ 14 s</td><td>shorter than the clip</td></tr>
+            <tr><td>Downwelling <tex>w_d=0.3U</tex></td><td class="v">0.75 m/s</td><td class="v">1.05 m/s</td><td>pulls harder</td></tr>
+            <tr><td>Pull-under threshold <tex>s^*</tex></td><td class="v">0.88</td><td class="v">≈ 0.76</td><td>even lighter nuts dive</td></tr>
+            <tr><td>Conjugate depth <tex>y_2</tex></td><td class="v">0.55 m</td><td class="v">≈ 0.70 m</td><td>roller close to being swept out</td></tr>
+            <tr><td>Reynolds number</td><td class="v">4.4×10⁵</td><td class="v">6.1×10⁵</td><td>still fully turbulent</td></tr>
+          </tbody>
+        </table></div>
+        <p>On top of that, the water level rises until it starts <strong>overtopping the boulder</strong>. The obstacle that created the dead zone is drowned. The jet spreads across the eddy and the closed streamlines open up. In the lab, the boulder's shelter fades between 3.2 and 4.4 m/s, as a stand-in for this. Hit <em>flood surge</em> and you'll see all of it at once.</p>
+      </section>
+
+      <section id="model" aria-labelledby="h-model">
+        <h2 id="h-model"><span class="num">12</span>What the browser model actually does</h2>
+        <ul>
+          <li><strong>Flow:</strong> an analytic, steady stream function. It has a <tex>\tanh</tex> shear layer, a jet that speeds up past the boulder while conserving flow rate, and the closed eddy cell of section 2 (1.3 m × 2.6 m, so its residence-time readout says ~21 s rather than 19 s). It is prescribed, not solved.</li>
+          <li><strong>Coconut:</strong> the reduced Maxey–Riley equation of section 6, integrated at ~120 sub-steps per second, with drag on the <em>submerged</em> frontal area (a light coconut riding high feels less drag).</li>
+          <li><strong>Turbulence:</strong> an Ornstein–Uhlenbeck random velocity, strongest in the shear layer.</li>
+          <li><strong>Vertical:</strong> a balance of <tex>w_d</tex> against <tex>w_b</tex>. Pushed deep enough, the coconut joins an underflow at <tex>0.8U</tex> heading downstream.</li>
+          <li><strong>Floods:</strong> the jet speed is scaled up to ×2.3 for a few seconds, and the boulder's shelter fades above 3.2 m/s.</li>
+        </ul>
+        <p>The offline analysis behind it (Python: a D2Q9 lattice-Boltzmann plan-view run with tracked particles, and a side-view roller model) gave the same qualitative picture, including the critical speeds of about 3.5 m/s (escape within the clip) and about 4.2 m/s (roller swept out).</p>
+      </section>
+
+      <section id="honest" aria-labelledby="h-honest">
+        <h2 id="h-honest"><span class="num">13</span>Honest section: what this gets wrong</h2>
+        <div class="callout warn"><span class="t">The coconut's mass doesn't add up</span>The model assumes <tex>D=17.5\ \mathrm{cm}</tex> and <tex>s=0.95</tex>, so <tex>m=s\rho V\approx 2.67\ \mathrm{kg}</tex>. But at <tex>s=0.95</tex> the coconut would float with only ~2.4 cm of dry cap and rise at 0.48 m/s, slower than the assumed 0.75 m/s downwelling. The model then predicts it should be pulled under at the shear line, yet in the video it rides visibly high and never dives. Either the coconut is much lighter (<tex>s\approx 0.5\text{–}0.8</tex> would give <tex>w_b\approx 1\text{–}1.5\ \mathrm{m/s}</tex>), it's smaller than it looks, or <tex>\beta_d</tex> is too big. <strong>The mass needs recalibrating.</strong></div>
+        <p>How to recalibrate, cheaply:</p>
+        <ol>
+          <li>Weigh and measure a similar coconut, then float it in a bucket.</li>
+          <li>Or read the freeboard <tex>f</tex> (height of the dry cap) off the footage. With immersion depth <tex>d=2R-f</tex>, the spherical-cap volume gives
+            <texd>s=\frac{V_\text{sub}}{V}=\frac{d^2(3R-d)}{4R^3}.</texd></li>
+          <li>Measure surface speeds with a floating marker and a stopwatch, rather than by eye.</li>
+        </ol>
+        <p>Other known limitations:</p>
+        <ul>
+          <li><strong>One short clip.</strong> Everything is estimated from 13.8 s of handheld video, with no measured speeds, depths or coconut properties.</li>
+          <li><strong>Prescribed flow.</strong> The water field is invented, not computed. The coconut doesn't disturb it, and there is no free surface, no 3-D roller and no waves.</li>
+          <li><strong>Turbulence is a random walk</strong> with assumed intensity and time scale.</li>
+          <li><strong>Exchange coefficient.</strong> <tex>k</tex> comes from laboratory groyne fields, not boulder eddies. The 2-D lattice-Boltzmann run disagrees with the formula by about a factor of 2.</li>
+          <li><strong>Downwelling</strong> <tex>\beta_d=0.3</tex> is a guess, and the answer is very sensitive to it.</li>
+          <li><strong>Forces left out:</strong> Magnus and shear lift, history force, wind, collisions with rocks.</li>
+        </ul>
+        <p>So treat this as a way to build intuition for dimensionless numbers and force balances, not as a prediction. To do it properly, see the <a href="tools.html">free tools page</a>: OpenFOAM's <code>interFoam</code> with a 6-DoF floating body, or DualSPHysics on a gaming GPU.</p>
+      </section>
+
+      <section id="refs" aria-labelledby="h-refs">
+        <h2 id="h-refs"><span class="num">14</span>Further reading</h2>
+        <ul class="refs">
+          <li>M. R. Maxey &amp; J. J. Riley (1983), "Equation of motion for a small rigid sphere in a nonuniform flow", <em>Physics of Fluids</em> 26, 883.</li>
+          <li>W. S. J. Uijttewaal, D. Lehmann &amp; A. van Mazijk (2001), "Exchange processes between a river and its groyne fields: model experiments", <em>J. Hydraulic Engineering</em> 127(11).</li>
+          <li>V. Weitbrecht, S. A. Socolofsky &amp; G. H. Jirka (2008), "Experiments on mass exchange between groin fields and main stream in rivers", <em>J. Hydraulic Engineering</em> 134(2).</li>
+          <li>H. Chanson, <em>The Hydraulics of Open Channel Flow: An Introduction</em> (2nd ed., 2004): hydraulic jumps, Bélanger's equation, Froude numbers.</li>
+          <li>F. M. White, <em>Fluid Mechanics</em>: control volumes, Reynolds transport theorem, sphere drag.</li>
+        </ul>
+      </section>
+
+      <nav class="next" aria-label="Next">
+        <a href="index.html"><small>Back to</small><b>The lab: try to free the coconut →</b></a>
+        <a href="tools.html"><small>Go further</small><b>The $0 tools to simulate it for real →</b></a>
+      </nav>
+      </div>
+    </article>
+  </div>
+</main>
+<!--FOOTER-->
+<script>
+// highlight the current section in the table of contents; collapse it on small screens
+(() => {
+  const toc = document.getElementById('toc'); if (matchMedia('(max-width:1079px)').matches) toc.removeAttribute('open');
+  const links = [...toc.querySelectorAll('a')], map = new Map(links.map((a) => [a.getAttribute('href').slice(1), a]));
+  toc.addEventListener('click', (e) => { if (e.target.closest('a') && matchMedia('(max-width:1079px)').matches) toc.removeAttribute('open'); });
+  const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { links.forEach((a) => a.classList.remove('on')); map.get(e.target.id)?.classList.add('on'); } }), { rootMargin: '-20% 0px -70% 0px' });
+  document.querySelectorAll('.article section[id]').forEach((s) => io.observe(s));
+})();
+</script>
+</body></html>

@@ -2,7 +2,7 @@
   "name": "coconut-lab",
   "version": "1.0.0",
   "private": true,
-  "description": "Free, no-sign-up interactive river-eddy lab: why a floating coconut stays trapped behind a boulder in a Bali stream (Francesco Andreoli).",
+  "description": "Free, no-sign-up interactive river-eddy lab and theory explainer: why a floating coconut stays trapped behind a boulder in a Bali stream (Francesco Andreoli).",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
@@ -11,10 +11,12 @@
     "test:e2e": "node test/e2e.mjs",
     "test:pages": "SUBPATH=/coconut-lab NO_SHOTS=1 node test/e2e.mjs",
     "test:live": "BASE=https://andreolf.github.io/coconut-lab SHOT_PREFIX=live- node test/e2e.mjs",
-    "test": "npm run build && npm run test:e2e && npm run test:pages"
+    "test": "npm run build && npm run test:e2e && npm run test:pages",
+    "figures": "python3 scripts/figures.py"
   },
   "license": "MIT",
   "devDependencies": {
+    "katex": "^0.19.1",
     "playwright": "^1.64.1"
   },
   "repository": {
