@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<link rel="preload" href="assets/archivo.woff" as="font" type="font/woff" crossorigin>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23000'/%3E%3Cpath d='M10 40c8-10 16 10 24 0s16 10 22 0' stroke='%23EEFF41' stroke-width='6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+
+<title>Free tools · simulate the coconut eddy properly, for $0 · Coconut Lab Bali</title>
+<meta name="description" content="Open-source tools to simulate the river eddy and floating coconut for real: OpenFOAM, DualSPHysics, FreeCAD, Onshape, Gmsh, Salome, ParaView, Python.">
+</head><body data-page="tools">
+<nav class="top wrap">
+  <a class="brand" href="index.html">COCONUT<b>LAB</b> <span class="hand" style="font-size:20px">bali</span></a>
+  <div class="links">
+    <a href="index.html" data-k="index">The lab</a>
+    <a href="tools.html" data-k="tools" class="on" aria-current="page">Free tools</a>
+  </div>
+</nav>
+
+<main class="wrap">
+  <h2 style="margin-top:28px">The <span style="color:var(--lime)">$0</span> engineering stack</h2>
+  <p class="lead" style="margin:0">Everything you need to go from the browser toy to a real CFD run of the coconut behind the boulder. Every tool here is free and battle-tested in research and industry.</p>
+  <div class="tools">
+    <div class="tool"><span class="rep">replaces Fluent / CFX</span><h3 style="margin-top:8px">OpenFOAM</h3><p>Finite-volume CFD toolbox. For the coconut: <code>interFoam</code> (VOF free surface) + <code>sixDoFRigidBodyMotion</code> for the floating body.</p><a href="https://www.openfoam.com/" rel="noopener">openfoam.com (ESI)</a><a href="https://openfoam.org/" rel="noopener">openfoam.org (Foundation)</a></div>
+    <div class="tool"><span class="rep">replaces commercial SPH / free-surface</span><h3 style="margin-top:8px">DualSPHysics</h3><p>GPU smoothed-particle hydrodynamics. It handles floating bodies natively, so it's the quickest way to throw a coconut into a plunge pool.</p><a href="https://github.com/DualSPHysics/DualSPHysics" rel="noopener">GitHub repo</a><a href="https://github.com/DualSPHysics/DualSPHysics/wiki" rel="noopener">wiki / docs</a></div>
+    <div class="tool"><span class="rep">replaces SolidWorks / CATIA</span><h3 style="margin-top:8px">FreeCAD</h3><p>Parametric 3-D CAD. Model the boulders, the bed and the coconut, then export STL for meshing.</p><a href="https://www.freecad.org/" rel="noopener">freecad.org</a></div>
+    <div class="tool"><span class="rep s">free for students / hobby</span><h3 style="margin-top:8px">Onshape</h3><p>Browser-based CAD, with free education and hobby plans. Works on a laptop in a Bali café.</p><a href="https://www.onshape.com/en/education/" rel="noopener">onshape.com/education</a></div>
+    <div class="tool"><span class="rep">replaces ANSYS Meshing / ICEM</span><h3 style="margin-top:8px">Gmsh</h3><p>Scriptable mesh generator (Python API). Great for 2-D river reaches and quick 3-D tet meshes.</p><a href="https://gmsh.info/" rel="noopener">gmsh.info</a></div>
+    <div class="tool"><span class="rep">replaces pre-processors</span><h3 style="margin-top:8px">Salome</h3><p>Geometry + meshing + study platform (CEA/EDF). It pairs with Code_Saturne and exports to OpenFOAM.</p><a href="https://www.salome-platform.org/" rel="noopener">salome-platform.org</a></div>
+    <div class="tool"><span class="rep">replaces CFD-Post / Tecplot</span><h3 style="margin-top:8px">ParaView</h3><p>Post-processing for huge datasets: streamlines, iso-surfaces, the coconut's trajectory from VTK.</p><a href="https://www.paraview.org/" rel="noopener">paraview.org</a></div>
+    <div class="tool"><span class="rep">replaces MATLAB</span><h3 style="margin-top:8px">Python + NumPy / SciPy / Matplotlib</h3><p>The offline version of this lab (D2Q9 lattice-Boltzmann eddy + side-view roller model) is a few hundred lines of NumPy.</p><a href="https://www.python.org/" rel="noopener">python.org</a><a href="https://numpy.org/" rel="noopener">numpy</a><a href="https://scipy.org/" rel="noopener">scipy</a><a href="https://matplotlib.org/" rel="noopener">matplotlib</a></div>
+    <div class="tool"><span class="rep s">bonus</span><h3 style="margin-top:8px">More free solvers</h3><p>SU2 (compressible/aero + adjoint), Basilisk (adaptive free-surface), FEniCS (FEM), Code_Saturne (EDF), PyVista (3-D plotting in Python).</p><a href="https://su2code.github.io/" rel="noopener">SU2</a><a href="https://basilisk.fr/" rel="noopener">Basilisk</a><a href="https://fenicsproject.org/" rel="noopener">FEniCS</a><a href="https://www.code-saturne.org/" rel="noopener">Code_Saturne</a><a href="https://pyvista.org/" rel="noopener">PyVista</a></div>
+  </div>
+  <div class="prose">
+    <h3>From this website to a "real" simulation of the coconut</h3>
+    <ol>
+      <li><b>Geometry:</b> FreeCAD/Onshape → <code>bed+boulders.stl</code>, <code>coconut.stl</code> (sphere D ≈ 0.175 m).</li>
+      <li><b>Mesh:</b> <code>blockMesh</code> box ~12 × 4 × 2 m + <code>snappyHexMesh</code> (refine to level 3–4 at the coconut and the shear line), or Gmsh/Salome.</li>
+      <li><b>Solve:</b> OpenFOAM <code>interFoam</code> (or <code>foamRun -solver incompressibleVoF</code>) with k-ω SST, <code>sixDoFRigidBodyMotion</code> with mass ≈ 2.67 kg. Expect 5–20 M cells and hours to days on a workstation for ~60 s of physical time.</li>
+      <li><b>Quick alternative:</b> DualSPHysics on a gaming GPU with <code>&lt;floatings&gt;</code>, dp ≈ 2 cm.</li>
+      <li><b>Post:</b> ParaView: the alpha.water = 0.5 iso-surface, streamlines, and the coconut's centre-of-mass track. Escape = it crosses the reattachment line.</li>
+    </ol>
+  </div>
+  <div class="note"><b>Licence note:</b> the prices of commercial tools vary with the contract, and many vendors offer free student editions. The point isn't that commercial tools are bad. It's that you can learn, and do serious work, without paying for them.</div>
+</main>
+<footer class="wrap">
+  <p><b>About.</b> Made by <b>Francesco Andreoli</b>, mechanical engineer (ETH Zurich alumnus), filming real fluid mechanics in Bali.
+  YouTube <a href="https://www.youtube.com/@swissintech" rel="noopener">@swissintech</a> · X <a href="https://x.com/francescoswiss" rel="noopener">@francescoswiss</a> · Source on <a href="https://github.com/andreolf/coconut-lab" rel="noopener">GitHub</a> (MIT)</p>
+  <p>Built with open-source tools + AI agents. Free, no sign-up, no tracking, everything runs in your browser.</p>
+  <p class="kbd">⚠️ This simulation is a simplified, educational approximation, with parameters estimated from video, not measured. Great for intuition, but not for designing real structures.</p>
+  <p class="kbd" style="opacity:.75">Also by me: <a href="https://andreolf.github.io/subak-lab/" rel="noopener">Subak Lab: Bali rice terraces →</a></p>
+</footer>
+
+</body></html>
