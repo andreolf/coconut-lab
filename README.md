@@ -36,10 +36,10 @@ npm run test:live      # same suite against https://andreolf.github.io/coconut-l
 GitHub Pages serves the `gh-pages` branch, which holds the contents of `dist/` plus a `.nojekyll`. All asset paths are relative, so the site works under the project subpath.
 ```bash
 npm run build
-git fetch origin gh-pages && git worktree add ../coconut-lab-gh-pages gh-pages
-rsync -a --delete --exclude .git dist/ ../coconut-lab-gh-pages/ && touch ../coconut-lab-gh-pages/.nojekyll
-cd ../coconut-lab-gh-pages && git add -A && git commit -m "deploy" && git push origin gh-pages
-cd - && git worktree remove ../coconut-lab-gh-pages
+git fetch origin gh-pages && git worktree add -B gh-pages ../coconut-lab-gh-pages origin/gh-pages
+cd ../coconut-lab-gh-pages && git rm -rq . && cp -r ../coconut-lab/dist/. . && touch .nojekyll
+git add -A && git commit -m "deploy" && git push origin gh-pages      # normal push, no force
+cd ../coconut-lab && git worktree remove ../coconut-lab-gh-pages && git branch -D gh-pages
 ```
 
 ## Stack
